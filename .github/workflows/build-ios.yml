@@ -1,0 +1,48 @@
+name: Build iOS (unsigned IPA)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate iOS Xcode project
+        run: npx tauri ios init --ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Rust library for iOS (verbose errors)
+        run: |
+          cd src-tauri
+          cargo build --target aarch64-apple-ios --release
+
+      - name: Build iOS app (unsigned IPA)
+        run: npx tauri ios build --no-sign --ci
+
+      - name: Locate and upload IPA
+        run: |
+          IPA_PATH=$(find src-tauri -name "*.ipa" | head -1)
+          echo "Found IPA: $IPA_PATH"
+          test -n "$IPA_PATH" || { echo "No IPA found"; exit 1; }
+          cp "$IPA_PATH" amble-ios-unsigned.ipa
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: amble-ios-unsigned
+          path: amble-ios-unsigned.ipa
