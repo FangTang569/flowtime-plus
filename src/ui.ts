@@ -14,8 +14,8 @@ let elBtnStart: HTMLElement;
 let elBtnPause: HTMLElement;
 let elBtnResume: HTMLElement;
 let elBtnRest: HTMLElement;
-let elBtnEndRest: HTMLElement;
 let elBtnStop: HTMLElement;
+let elBtnStopLabel: HTMLElement;
 
 // --- Helpers ---
 
@@ -241,14 +241,17 @@ export function render(snap: TimerSnapshot): void {
   setVisible(elBtnPause, snap.state === "running");
   setVisible(elBtnResume, snap.state === "paused");
   setVisible(elBtnRest, snap.state === "paused");
-  setVisible(elBtnEndRest, snap.state === "resting");
 
-  // The secondary escape hatch keeps its space (invisible, not hidden) so the
-  // centred panel does not shift when it appears.
-  elBtnStop.classList.toggle(
-    "invisible",
-    !(snap.state === "running" || snap.state === "paused"),
-  );
+  // `End` and `End Rest` are the same control: both call timer.stop(). Only the
+  // label and the emphasis tier change — a sole "End Rest" reads as the primary
+  // action, while a paired "End" is deliberately the quietest of the three.
+  const stopBase =
+    "flex-1 h-12 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer";
+  elBtnStop.className = resting
+    ? `${stopBase} bg-neutral-200 hover:bg-neutral-300 text-neutral-700`
+    : `${stopBase} bg-neutral-100 hover:bg-neutral-200 text-neutral-500`;
+  elBtnStopLabel.textContent = resting ? "End Rest" : "End";
+  setVisible(elBtnStop, snap.state !== "idle");
 }
 
 // --- Setup ---
@@ -277,15 +280,14 @@ export function setupUI(timer: FlowTimer): void {
   elBtnPause = document.getElementById("btn-pause")!;
   elBtnResume = document.getElementById("btn-resume")!;
   elBtnRest = document.getElementById("btn-rest")!;
-  elBtnEndRest = document.getElementById("btn-end-rest")!;
   elBtnStop = document.getElementById("btn-stop")!;
+  elBtnStopLabel = document.getElementById("btn-stop-label")!;
 
   // Wire timer controls
   elBtnStart.addEventListener("click", () => timer.start());
   elBtnPause.addEventListener("click", () => timer.pause());
   elBtnResume.addEventListener("click", () => timer.resume());
   elBtnRest.addEventListener("click", () => timer.startRest());
-  elBtnEndRest.addEventListener("click", () => timer.stop());
   elBtnStop.addEventListener("click", () => timer.stop());
 
   // Ratio slider — mirrors the settings slider, both only usable while idle

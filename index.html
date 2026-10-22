@@ -109,44 +109,41 @@
         </div>
 
         <!-- Primary action: one capsule row. Children are flex-1, so whichever
-             are visible share the full width — the footprint is identical in
-             every state, which is what stops the button reading as a "foot"
-             and keeps the panel from jumping between states. -->
-        <div id="controls" class="w-full flex flex-col items-center gap-3 mb-10">
-          <div class="w-full flex items-center gap-2">
-            <button id="btn-start"
-              class="flex-1 h-12 bg-accent hover:bg-teal-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer">
-              <svg width="12" height="14" viewBox="0 0 18 20" fill="currentColor"><path d="M0 0v20l18-10z"/></svg>
-              Start
-            </button>
-            <button id="btn-pause"
-              class="flex-1 h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
-              <svg width="12" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-              Pause
-            </button>
-            <button id="btn-resume"
-              class="flex-1 h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
-              <svg width="12" height="14" viewBox="0 0 18 20" fill="currentColor"><path d="M0 0v20l18-10z"/></svg>
-              Resume
-            </button>
-            <button id="btn-rest"
-              class="flex-1 h-12 bg-accent hover:bg-teal-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-              Start Rest
-            </button>
-            <button id="btn-end-rest"
-              class="flex-1 h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><rect x="1" y="1" width="10" height="10" rx="1.5"/></svg>
-              End Rest
-            </button>
-          </div>
-          <!-- Secondary escape hatch. Kept in the layout (invisible, not hidden)
-               so showing it never shifts the centred panel. -->
+             are visible share the width — one capsule when the state has a
+             single action, three when it does not. The footprint is identical
+             in every state, so the centred panel never jumps.
+
+             `End` and `End Rest` are the SAME button: both call timer.stop().
+             ui.ts swaps its label and tier per state. -->
+        <div id="controls" class="w-full flex items-center gap-2 mb-10">
+          <button id="btn-start"
+            class="flex-1 h-12 bg-accent hover:bg-teal-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer">
+            <svg width="12" height="14" viewBox="0 0 18 20" fill="currentColor"><path d="M0 0v20l18-10z"/></svg>
+            Start
+          </button>
+          <button id="btn-pause"
+            class="flex-1 h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
+            <svg width="12" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+            Pause
+          </button>
+          <button id="btn-resume"
+            class="flex-1 h-12 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
+            <svg width="12" height="14" viewBox="0 0 18 20" fill="currentColor"><path d="M0 0v20l18-10z"/></svg>
+            Resume
+          </button>
+          <button id="btn-rest"
+            class="flex-1 h-12 bg-accent hover:bg-teal-300 text-neutral-800 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Rest
+          </button>
           <button id="btn-stop"
-            class="invisible text-neutral-500 hover:text-neutral-700 text-sm underline underline-offset-4 transition-colors cursor-pointer">End Session</button>
+            class="flex-1 h-12 bg-neutral-100 hover:bg-neutral-200 text-neutral-500 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer hidden">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><rect x="1" y="1" width="10" height="10" rx="1.5"/></svg>
+            <span id="btn-stop-label">End</span>
+          </button>
         </div>
 
         <!-- Ratio — a pre-start setting only, so it sits at the foot of the panel

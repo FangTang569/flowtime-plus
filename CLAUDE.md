@@ -205,27 +205,32 @@ auto-centring still leaves sensible breathing room instead of dead space.
 
 ### Primary action
 The action is a **single capsule row**, not a set of ad-hoc buttons. Every
-button in `#controls > div` is `flex-1 h-12`, and hidden ones are `display:none`,
-so whichever are visible simply share the row: one capsule when the state has a
-single action, two half-width capsules when it does not. The footprint is the
-same in every state, so the centred panel never jumps.
+button in `#controls` is `flex-1 h-12`, and absent ones are `display:none`, so
+whichever are visible simply share the row. The footprint is `h-12` in every
+state, so the centred panel never jumps.
 
-| State | Capsules | Secondary |
-|-------|----------|-----------|
-| `idle` | `▶ Start` (accent) | — |
-| `running` | `⏸ Pause` (neutral) | End Session link |
-| `paused` | `▶ Resume` (neutral) + `☾ Start Rest` (accent) | End Session link |
-| `resting` | `■ End Rest` (neutral) | — |
+| State | Capsules, left to right |
+|-------|-------------------------|
+| `idle` | `▶ Start` (accent) |
+| `running` | `⏸ Pause` (secondary) + `■ End` (tertiary) |
+| `paused` | `▶ Resume` (secondary) + `☾ Rest` (accent) + `■ End` (tertiary) |
+| `resting` | `■ End Rest` (secondary — it is the only action) |
 
-Capsules are `rounded-xl` (12px), not `rounded-full` — the pill shape read as
-too soft against the app's `rounded-xl` card language.
+Three tiers: accent (`bg-accent`) for the recommended action, secondary
+(`bg-neutral-200`) for the plain one, tertiary (`bg-neutral-100 text-neutral-500`)
+so that a three-up row still has a visible hierarchy.
 
+- **`End` and `End Rest` are one button** (`#btn-stop`). Both call
+  `timer.stop()` — ending a rest *is* ending the session, and it banks the
+  leftover into the pool. `render()` swaps only the label (`#btn-stop-label`)
+  and the tier. Do not split it back into a link plus a capsule.
 - **No duplicate start affordance.** The old top-right mini play button was
   removed on purpose; do not reintroduce a second way to call `start()`.
-- The `End Session` link uses `invisible`, not `hidden`: it keeps its space so
-  the centred panel does not shift when the link appears.
-- Both `End Rest` and the `End Session` link call `timer.stop()`. During rest
-  that is the only exit, and it banks the leftover into the pool.
+- Labels are kept short (`Rest`, `End`) deliberately: `paused` shows three
+  capsules, so each gets `(320 − 16) / 3 ≈ 101px`. "Start Rest" and
+  "End Session" both overflow that at `text-sm` with an icon.
+- Capsules are `rounded-xl` (12px), not `rounded-full` — the pill shape read as
+  too soft against the app's `rounded-xl` card language.
 
 ### Ratio slider
 The ratio control is the only widget with real ergonomics to preserve.
