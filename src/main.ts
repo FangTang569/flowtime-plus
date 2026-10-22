@@ -45,15 +45,11 @@ timer.onTick((snap) => {
   });
 });
 
-timer.onSessionEnd(async (data) => {
-  // Persist the pool first — losing the leftover rest is worse than losing the
-  // history row.
+timer.onSessionEnd((data) => {
+  // Bank the pool synchronously — losing the leftover rest is worse than
+  // losing the history row — then persist the session best-effort.
   saveUnusedRestMs(data.unusedRestMs);
-  try {
-    await saveSession(data);
-  } catch (e) {
-    console.error("Failed to save session:", e);
-  }
+  void saveSession(data).catch((e) => console.error("Failed to save session:", e));
 });
 
 // The pool is a single-day allowance: clear it the moment the local date rolls

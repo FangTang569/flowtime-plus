@@ -188,7 +188,7 @@
       <!-- ===== Stats Panel ===== -->
       <div id="panel-stats" class="w-full max-w-xs shrink-0 flex flex-col items-center my-auto hidden">
 
-        <!-- Stats navigation -->
+        <!-- Period navigation -->
         <div class="w-full flex items-center justify-between mb-4">
           <button id="stat-prev" class="text-neutral-500 hover:text-neutral-700 transition-colors cursor-pointer p-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -199,36 +199,33 @@
           </button>
         </div>
 
-        <!-- Stats content -->
-        <div id="stats-period" class="flex gap-1 mb-6">
-          <button id="stat-week" class="bg-neutral-200 rounded-full px-3 py-1 text-xs font-semibold text-neutral-800 cursor-pointer transition-colors">Week</button>
-          <button id="stat-month" class="text-neutral-500 hover:text-neutral-700 rounded-full px-3 py-1 text-xs cursor-pointer transition-colors">Month</button>
-          <button id="stat-year" class="text-neutral-500 hover:text-neutral-700 rounded-full px-3 py-1 text-xs cursor-pointer transition-colors">Year</button>
+        <div class="w-full flex gap-1 mb-8">
+          <button id="stat-week" class="flex-1 h-8 rounded-xl bg-neutral-200 text-xs font-semibold text-neutral-800 cursor-pointer transition-colors">Week</button>
+          <button id="stat-month" class="flex-1 h-8 rounded-xl text-xs text-neutral-500 hover:text-neutral-700 cursor-pointer transition-colors">Month</button>
+          <button id="stat-year" class="flex-1 h-8 rounded-xl text-xs text-neutral-500 hover:text-neutral-700 cursor-pointer transition-colors">Year</button>
         </div>
 
-        <!-- Summary cards -->
-        <div class="w-full flex gap-2 mb-6">
-          <div class="flex-1 bg-white rounded-xl px-3 py-2 text-center">
-            <p class="text-neutral-500 text-xs">Time</p>
-            <p id="stat-focus" class="text-neutral-800 text-sm font-semibold font-mono tabular-nums">0m</p>
+        <!-- Numeric readout. Deliberately no chart yet — plain figures for now. -->
+        <div class="w-full flex flex-col">
+          <div class="flex items-baseline justify-between py-3 border-b border-neutral-100">
+            <span class="text-neutral-400 text-xs">总专注</span>
+            <span id="stat-focus" class="text-2xl font-mono font-light tabular-nums text-neutral-800">—</span>
           </div>
-          <div class="flex-1 bg-white rounded-xl px-3 py-2 text-center">
-            <p class="text-neutral-500 text-xs">Break %</p>
-            <p id="stat-break" class="text-neutral-800 text-sm font-semibold font-mono tabular-nums">0%</p>
+          <div class="flex items-baseline justify-between py-3 border-b border-neutral-100">
+            <span class="text-neutral-400 text-xs">会话数</span>
+            <span id="stat-sessions" class="text-2xl font-mono font-light tabular-nums text-neutral-800">—</span>
           </div>
-          <div class="flex-1 bg-white rounded-xl px-3 py-2 text-center">
-            <p class="text-neutral-500 text-xs">Sessions</p>
-            <p id="stat-count" class="text-neutral-800 text-sm font-semibold font-mono tabular-nums">0</p>
+          <div class="flex items-baseline justify-between py-3 border-b border-neutral-100">
+            <span class="text-neutral-400 text-xs">平均每次</span>
+            <span id="stat-average" class="text-2xl font-mono font-light tabular-nums text-neutral-800">—</span>
           </div>
-        </div>
-
-        <!-- Bar chart -->
-        <div id="bar-chart" class="w-full flex items-end gap-1">
-          <!-- bars rendered by JS -->
+          <div class="flex items-baseline justify-between py-3">
+            <span class="text-neutral-400 text-xs">休息占比</span>
+            <span id="stat-rest" class="text-2xl font-mono font-light tabular-nums text-neutral-800">—</span>
+          </div>
         </div>
 
       </div>
-
       <!-- ===== Settings Panel ===== -->
       <div id="panel-settings" class="w-full max-w-xs shrink-0 flex flex-col items-center my-auto hidden">
 

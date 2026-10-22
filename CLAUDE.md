@@ -54,7 +54,7 @@ amble-flowtime/
 │   ├── main.ts                # Bootstrap: create timer, wire UI & storage
 │   ├── timer.ts               # FlowTimer class (state machine + timing + pool settle)
 │   ├── pool.ts                # Unused-rest pool (localStorage, daily reset)
-│   ├── ui.ts                  # DOM manipulation, render(), setupUI(), renderStats()
+│   ├── ui.ts                  # DOM manipulation, render(), setupUI()
 │   ├── types.ts               # Shared TypeScript types
 │   ├── storage.ts             # SQLite session persistence
 │   ├── overlay.ts             # Mini overlay window script
@@ -147,6 +147,21 @@ Provides smooth second-boundary transitions without measurable CPU cost.
 - `unused` column turns amber only while the pool is actually being spent
 - Not part of the SQLite schema — it is single-day state, not history
 
+### Statistics panel
+The panel behind the bar-chart icon shows **four plain numbers** for the
+selected window: 总专注 / 会话数 / 平均每次 / 休息占比. There is deliberately
+**no chart** — the original bar chart was removed along with the economy
+experiment, and the next design has not been decided yet.
+
+- `renderStats()` in `ui.ts` calls `getStatsBetween(since, until)` in
+  `storage.ts`, a single `GROUP BY block_type` aggregate over `time_blocks`.
+- `getDateRange()` builds Monday-based weeks, calendar months and calendar
+  years; `statsOffset` walks backwards, and `stat-next` is hidden at the
+  current period so the UI cannot page into the future.
+- Empty windows render `—` rather than `0`, so "no data yet" never reads as a
+  real measurement.
+- `time_blocks` is written by `saveSession` and read only here.
+
 ### Ledger emphasis
 `render()` in `ui.ts` resolves one tone per column. Three neutral levels plus
 two semantic tones; numbers carry the emphasis, labels stay at `neutral-400`
@@ -181,7 +196,7 @@ and they are gone.
 All three panels are children of `#panels` (`flex-1`) and each carries
 `my-auto`, so the visible one is vertically centred in the leftover height.
 `my-auto` rather than `justify-center` is deliberate: auto margins collapse to
-zero once a panel is taller than the viewport, so a tall Stats chart scrolls
+zero once a panel is taller than the viewport, so the tall stats panel scrolls
 instead of having its top clipped.
 
 The window is 580px tall with `pt-10 pb-8`, leaving ~508px of usable height;
@@ -254,6 +269,9 @@ ships with Vite and runs it under plain node. It covers the readout number per
 state, ratio locking, pause settlement, pool accrual/spending, the rest budget
 cap, and the daily reset. Run it after touching `timer.ts` or `pool.ts`.
 
+The statistics panel has no headless coverage — it is one SQL aggregate behind
+a date-range helper.
+
 ### Prerequisites (Windows)
 - Node.js >= 18
 - Rust >= 1.77
@@ -267,7 +285,7 @@ cap, and the daily reset. Run it after touching `timer.ts` or `pool.ts`.
 | Timer format MM:SS only | Sufficient for < 99 min; at `text-5xl` three-digit minutes exceed the 320px column |
 | Pool lost if the app dies mid-rest | It only banks on session end; acceptable for a daily allowance |
 | Pool is localStorage, not SQLite | Single-day state; not worth a table or a migration |
-| Stats still report work seconds | Sessions are stored as work+rest rows even though the UI hides work time |
+| Statistics page has no chart | Deliberate placeholder — four plain numbers until the next design |
 | No notifications on rest complete | Add tauri-plugin-notification later |
 | No system tray / background mode | Tauri plugin in future step |
 | No sound alerts | Future enhancement |
@@ -280,10 +298,11 @@ removed** in flowtime+ — there is no time block view and no quick-add. They ma
 come back in a different form; the DB schema still has `is_manual`/`tag`/`note`
 columns to support that.
 
-1. **Stats & forgiveness** (零挫败感):
-   - Statistics at week/month granularity (daily stats hidden deeper)
+1. **Forgiveness** (零挫败感):
    - Rest overtime goes negative silently (no punishment)
    - Slider to quickly record actual duration for long sessions
+   - Note: the old "stats at week/month granularity" item is gone — the panel
+     was replaced by the numeric stats placeholder.
 2. **Production polish**:
    - ~~Replace Tailwind CDN with CLI/PostCSS build~~ ✅
    - Add app icons

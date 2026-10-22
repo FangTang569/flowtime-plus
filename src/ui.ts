@@ -1,6 +1,6 @@
 import type { FlowTimer } from "./timer";
 import type { TimerSnapshot } from "./types";
-import { getStatsBetween, getBarsBetween, formatDuration } from "./storage";
+import { formatDuration, getStatsBetween } from "./storage";
 
 // --- DOM references (set once on init) ---
 let elStateLabel: HTMLElement;
@@ -393,7 +393,7 @@ export function setupUI(timer: FlowTimer): void {
     elSegSlider.className = `${SLIDER_BASE} ${posMap[view]}`;
 
     if (view === "stats") {
-      renderStats();
+      void renderStats();
     }
   }
 
@@ -404,44 +404,11 @@ export function setupUI(timer: FlowTimer): void {
   // Initial state: timer icon = active (darker)
   elSegTimer.classList.add("text-neutral-800");
 
-  // Stats period selector
-  const statButtons = [
-    { el: document.getElementById("stat-week")!, period: "week" as const },
-    { el: document.getElementById("stat-month")!, period: "month" as const },
-    { el: document.getElementById("stat-year")!, period: "year" as const },
-  ];
-
-  statButtons.forEach(({ el, period }) => {
-    el.addEventListener("click", () => {
-      statsPeriod = period;
-      statsOffset = 0;
-      statButtons.forEach(({ el: b, period: p }) => {
-        if (p === period) {
-          b.className =
-            "bg-neutral-200 rounded-full px-3 py-1 text-xs font-semibold text-neutral-800 cursor-pointer transition-colors";
-        } else {
-          b.className =
-            "text-neutral-500 hover:text-neutral-700 rounded-full px-3 py-1 text-xs cursor-pointer transition-colors";
-        }
-      });
-      renderStats();
-    });
-  });
-
-  // Stats navigation
-  document.getElementById("stat-prev")?.addEventListener("click", () => {
-    statsOffset--;
-    renderStats();
-  });
-  document.getElementById("stat-next")?.addEventListener("click", () => {
-    if (statsOffset < 0) {
-      statsOffset++;
-      renderStats();
-    }
-  });
+  setupStatsNav();
 }
 
-// --- Stats ---
+// --- Stats ------------------------------------------------------------------
+// A numeric placeholder: four figures for the selected window, no chart yet.
 
 let statsPeriod: "week" | "month" | "year" = "week";
 let statsOffset = 0;
@@ -460,8 +427,7 @@ function getDateRange(): { since: number; until: number; label: string } {
     since.setHours(0, 0, 0, 0);
     until = new Date(since);
     until.setDate(since.getDate() + 7);
-    const fmt = (d: Date) =>
-      d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const end = new Date(until);
     end.setDate(end.getDate() - 1);
     label = `${fmt(since)} – ${fmt(end)}, ${since.getFullYear()}`;
@@ -478,71 +444,71 @@ function getDateRange(): { since: number; until: number; label: string } {
   return { since: since.getTime(), until: until.getTime(), label };
 }
 
+function setRow(id: string, value: string): void {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
 export async function renderStats(): Promise<void> {
   const { since, until, label } = getDateRange();
-  const stats = await getStatsBetween(since, until);
 
-  // Period label
-  const elLabel = document.getElementById("stat-range-label");
-  if (elLabel) elLabel.textContent = label;
+  setRow("stat-range-label", label);
 
-  // Nav buttons
   const elPrev = document.getElementById("stat-prev");
   const elNext = document.getElementById("stat-next");
-  if (elPrev) {
-    elPrev.style.visibility = "visible";
-  }
-  if (elNext) {
-    elNext.style.visibility = statsOffset === 0 ? "hidden" : "visible";
-  }
+  if (elNext) elNext.style.visibility = statsOffset === 0 ? "hidden" : "visible";
+  if (elPrev) elPrev.style.visibility = "visible";
 
-  // Summary cards
-  const elFocus = document.getElementById("stat-focus");
-  const elBreak = document.getElementById("stat-break");
-  const elCount = document.getElementById("stat-count");
-
-  const totalSec = stats.focusSec + stats.breakSec;
-  const breakPct = totalSec > 0 ? Math.round((stats.breakSec / totalSec) * 100) : 0;
-
-  if (elFocus) elFocus.textContent = formatDuration(totalSec);
-  if (elBreak) elBreak.textContent = `${breakPct}%`;
-  if (elCount) elCount.textContent = String(stats.sessionCount);
-
-  // Bar chart
-  const elChart = document.getElementById("bar-chart");
-  if (!elChart) return;
-
-  const gran: "day" | "week" | "month" =
-    statsPeriod === "week" ? "day" : statsPeriod === "month" ? "week" : "month";
-  const bars = await getBarsBetween(since, until, gran);
-
-  if (bars.length === 0) {
-    elChart.innerHTML = `<p class="text-neutral-500 text-sm w-full text-center">No data</p>`;
-    return;
+  let stats = { focusSec: 0, restSec: 0, sessions: 0 };
+  try {
+    stats = await getStatsBetween(since, until);
+  } catch (e) {
+    console.error("Failed to load stats:", e);
   }
 
-  const maxSec = Math.max(1, ...bars.map((b) => b.focusSec + b.breakSec));
+  const totalSec = stats.focusSec + stats.restSec;
+  const restPct = totalSec > 0 ? Math.round((stats.restSec / totalSec) * 100) : 0;
+  const avgSec = stats.sessions > 0 ? Math.round(stats.focusSec / stats.sessions) : 0;
 
-  // Dynamic chart height: ~30px per hour of the tallest bar
-  const maxHours = maxSec / 3600;
-  const chartPx = Math.round(Math.max(80, Math.min(280, maxHours * 30)));
-  elChart.style.height = `${chartPx}px`;
+  setRow("stat-focus", stats.focusSec > 0 ? formatDuration(stats.focusSec) : "—");
+  setRow("stat-sessions", stats.sessions > 0 ? String(stats.sessions) : "—");
+  setRow("stat-average", avgSec > 0 ? formatDuration(avgSec) : "—");
+  setRow("stat-rest", totalSec > 0 ? `${restPct}%` : "—");
+}
 
-  elChart.innerHTML = bars
-    .map((b) => {
-      const total = b.focusSec + b.breakSec;
-      const heightPct = (total / maxSec) * 100;
-      const breakPct = total > 0 ? (b.breakSec / total) * 100 : 0;
+export function setupStatsNav(): void {
+  const buttons = [
+    { el: document.getElementById("stat-week")!, period: "week" as const },
+    { el: document.getElementById("stat-month")!, period: "month" as const },
+    { el: document.getElementById("stat-year")!, period: "year" as const },
+  ];
 
-      return `
-      <div class="flex-1 h-full flex flex-col items-center justify-end gap-0.5">
-        <span class="text-neutral-500 text-xs font-mono tabular-nums leading-none">${total > 0 ? formatDuration(total) : ""}</span>
-        <div class="w-full rounded-sm bg-accent relative overflow-hidden" style="height:${heightPct}%">
-          <div class="bg-neutral-300 w-full absolute bottom-0 rounded-b-sm" style="height:${breakPct}%"></div>
-        </div>
-        <span class="text-neutral-500 text-xs">${b.label}</span>
-      </div>
-    `;
-    })
-    .join("");
+  const paint = (active: string) => {
+    for (const { el, period } of buttons) {
+      el.className =
+        period === active
+          ? "flex-1 h-8 rounded-xl bg-neutral-200 text-xs font-semibold text-neutral-800 cursor-pointer transition-colors"
+          : "flex-1 h-8 rounded-xl text-xs text-neutral-500 hover:text-neutral-700 cursor-pointer transition-colors";
+    }
+  };
+
+  for (const { el, period } of buttons) {
+    el.addEventListener("click", () => {
+      statsPeriod = period;
+      statsOffset = 0;
+      paint(period);
+      void renderStats();
+    });
+  }
+  paint(statsPeriod);
+
+  document.getElementById("stat-prev")?.addEventListener("click", () => {
+    statsOffset--;
+    void renderStats();
+  });
+  document.getElementById("stat-next")?.addEventListener("click", () => {
+    if (statsOffset >= 0) return;
+    statsOffset++;
+    void renderStats();
+  });
 }
