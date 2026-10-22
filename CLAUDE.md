@@ -162,6 +162,13 @@ experiment, and the next design has not been decided yet.
   real measurement.
 - `time_blocks` is written by `saveSession` and read only here.
 
+Today's tally worth a second mention: `renderDailySummary()` also queries
+`time_blocks`, but only for the current calendar day, and writes into
+`#daily-summary` in the **sub-header** — not into any panel. That placement is
+deliberate: it is global context, it shows on all three tabs, and it costs the
+timer panel zero vertical space (the readout's rhythm was hard-won). It refreshes
+at startup, after each session write resolves, and on the midnight rollover.
+
 ### Ledger emphasis
 `render()` in `ui.ts` resolves one tone per column. Three neutral levels plus
 two semantic tones; numbers carry the emphasis, labels stay at `neutral-400`

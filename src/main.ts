@@ -2,7 +2,7 @@ import "@fontsource/inter/latin-300.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-600.css";
 import { FlowTimer } from "./timer";
-import { render, setupUI } from "./ui";
+import { render, renderDailySummary, setupUI } from "./ui";
 import { saveSession } from "./storage";
 import { loadUnusedRestMs, saveUnusedRestMs, todayKey } from "./pool";
 import { emit } from "@tauri-apps/api/event";
@@ -47,13 +47,17 @@ timer.onTick((snap) => {
 
 timer.onSessionEnd((data) => {
   // Bank the pool synchronously — losing the leftover rest is worse than
-  // losing the history row — then persist the session best-effort.
+  // losing the history row — then persist the session best-effort and refresh
+  // today's tally once the write has actually landed.
   saveUnusedRestMs(data.unusedRestMs);
-  void saveSession(data).catch((e) => console.error("Failed to save session:", e));
+  void saveSession(data)
+    .then(() => renderDailySummary())
+    .catch((e) => console.error("Failed to save session:", e));
 });
 
 // The pool is a single-day allowance: clear it the moment the local date rolls
-// over, even if the app has been left running overnight.
+// over, even if the app has been left running overnight. Today's tally resets
+// with it.
 let currentDay = todayKey();
 setInterval(() => {
   const day = todayKey();
@@ -61,6 +65,7 @@ setInterval(() => {
   currentDay = day;
   timer.clearUnusedRest();
   saveUnusedRestMs(0);
+  void renderDailySummary();
 }, 60_000);
 
 // Window controls (desktop only)
@@ -116,3 +121,4 @@ const today = new Date().toISOString().slice(0, 10);
 invoke("backup_database", { dateStr: today }).catch(() => {});
 
 render(timer.getSnapshot());
+void renderDailySummary();

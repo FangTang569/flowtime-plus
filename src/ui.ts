@@ -478,8 +478,34 @@ export async function renderStats(): Promise<void> {
   setRow("stat-rest", totalSec > 0 ? `${restPct}%` : "—");
 }
 
-export function setupStatsNav(): void {
-  const buttons = [
+/**
+ * Today's tally in the sub-header. A separate query from the stats panel on
+ * purpose: this one is always on screen and only ever covers today.
+ */
+export async function renderDailySummary(): Promise<void> {
+  const el = document.getElementById("daily-summary");
+  if (!el) return;
+
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+  try {
+    const stats = await getStatsBetween(start, start + 86_400_000);
+    if (stats.focusSec <= 0 && stats.sessions <= 0) {
+      el.textContent = "今日 —";
+      return;
+    }
+    const parts: string[] = [];
+    if (stats.focusSec > 0) parts.push(formatDuration(stats.focusSec));
+    if (stats.sessions > 0) parts.push(`${stats.sessions} 次`);
+    el.textContent = `今日 ${parts.join(" · ")}`;
+  } catch (e) {
+    console.error("Failed to load today's tally:", e);
+    el.textContent = "今日 —";
+  }
+}
+
+export function setupStatsNav(): void {  const buttons = [
     { el: document.getElementById("stat-week")!, period: "week" as const },
     { el: document.getElementById("stat-month")!, period: "month" as const },
     { el: document.getElementById("stat-year")!, period: "year" as const },
